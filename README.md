@@ -8,7 +8,7 @@ toolchain. The code does nothing useful — it's a starting point for new projec
 | Tool | Purpose |
 |------|---------|
 | [uv](https://docs.astral.sh/uv/) | Package manager & virtual environment |
-| [Python](https://www.python.org) | Language (≥ 3.11, managed by uv) |
+| [Python](https://www.python.org) | Language (≥ 3.14, managed by uv) |
 | [Pyright](https://github.com/microsoft/pyright) | Static type checking (strict mode) |
 | [Ruff](https://docs.astral.sh/ruff/) | Linter and formatter |
 | [pytest](https://docs.pytest.org/) | Test runner |
@@ -64,7 +64,7 @@ These are **enforced by the toolchain**, not just preferences:
 ## Project Structure
 
 ```
-├── .github/workflows/     # CI + Copilot setup
+├── .github/workflows/     # CI
 ├── src/
 │   ├── __init__.py        # Package init (version)
 │   ├── index.py           # Trivial module (replace with your code)

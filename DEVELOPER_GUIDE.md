@@ -23,13 +23,13 @@ and one test.
 
 | Category | Technology | Notes |
 |----|----|----|
-| **Runtime** | Python ≥ 3.11 | Required (`requires-python` in `pyproject.toml`) |
+| **Runtime** | Python ≥ 3.14 | Required (`requires-python` in `pyproject.toml`) |
 | **Package Manager** | uv | Fast dependency management & virtual environments |
 | **Build Backend** | Hatchling | Wheel building (`[build-system]`) |
 | **Type Checker** | Pyright (strict) | Static type analysis |
 | **Formatter** | Ruff | Fast, unified formatting |
 | **Linter** | Ruff | Multi-rule linting (see §7 for details) |
-| **Testing** | pytest 8 | Test runner configured in `pyproject.toml` |
+| **Testing** | pytest 9 | Test runner configured in `pyproject.toml` |
 | **CI** | GitHub Actions | type-check → lint → test on PRs |
 
 ## 3. Prerequisites & Setup
@@ -68,8 +68,7 @@ All four must pass with zero errors.
 python-template/
 ├── .github/
 │   └── workflows/
-│       ├── ci.yml                        # type-check → lint → test on PR
-│       └── copilot-setup-steps.yml       # Copilot agent environment
+│       └── ci.yml                        # type-check → lint → test on PR
 ├── src/
 │   ├── __init__.py                       # Package init (version)
 │   ├── index.py                          # Trivial module (replace with your code)
@@ -91,7 +90,7 @@ will fail if you violate them.
 ### 5.1 `from __future__ import annotations`
 
 Every module must start with this import. It enables PEP 604 style
-unions (`X | Y`) and deferred annotation evaluation on Python 3.11.
+unions (`X | Y`) and deferred annotation evaluation on Python 3.14.
 
 ```python
 # ❌ Missing import
@@ -126,7 +125,7 @@ def add(a: int, b: int) -> int:
 | Line length | 100 characters |
 | Quote style | Double quotes |
 | Import sorting | `isort` (ruff `I` rules) |
-| Target version | Python 3.11 |
+| Target version | Python 3.14 |
 
 ## 6. Formatting Pipeline
 
@@ -194,29 +193,18 @@ Runs on every pull request:
 
 1. **Checkout** code
 2. **Setup** uv
-3. **Install** Python 3.11
+3. **Install** Python 3.14
 4. **Sync** dependencies (`uv sync --all-extras`)
 5. **Type-check** (`uv run pyright src/`)
 6. **Lint** (`uv run ruff check src/`)
 7. **Format check** (`uv run ruff format --check src/`)
 8. **Test** (`uv run pytest`)
 
-### `copilot-setup-steps.yml`
-
-Provisions the environment for GitHub Copilot's coding agent:
-
-1. **Checkout** code
-2. **Setup** uv
-3. **Install** Python 3.11
-4. **Sync** dependencies (`uv sync --all-extras`)
-
-Runs when the workflow file itself changes, or via manual dispatch.
-
 ## 10. Pyright Configuration
 
 | Setting | Value | Purpose |
 |---------|-------|---------|
-| `pythonVersion` | `"3.11"` | Target Python version |
+| `pythonVersion` | `"3.14"` | Target Python version |
 | `typeCheckingMode` | `"strict"` | Full strict type analysis |
 
 In strict mode, Pyright enforces:
