@@ -3,14 +3,14 @@ name = "python-template"
 version = "0.1.0"
 description = "A minimal Python project template with a complete type-check, format, lint, and test toolchain"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.14"
 dependencies = []
 
 [project.optional-dependencies]
 dev = [
     "pytest>=9.1.1",
     "pyright>=1.1.411",
-    "ruff>=0.15.20",
+    "ruff>=0.16.0",
 ]
 
 [build-system]
@@ -25,7 +25,7 @@ testpaths = ["src/tests"]
 python_files = ["test_*.py"]
 
 [tool.ruff]
-target-version = "py311"
+target-version = "py314"
 line-length = 100
 
 [tool.ruff.lint]
@@ -35,5 +35,5 @@ select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "TCH"]
 known-first-party = ["src"]
 
 [tool.pyright]
-pythonVersion = "3.11"
+pythonVersion = "3.14"
 typeCheckingMode = "strict"
