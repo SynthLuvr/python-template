@@ -42,7 +42,8 @@ def foo() -> str: ...
 
 ### Strict type checking
 Pyright runs in `strict` mode. All function parameters and return types must
-have explicit type annotations.
+have explicit type annotations. Strict mode also rejects implicit `Any` types
+and untyped `dict`/`list` literals where the type can't be inferred.
 
 ```python
 # ❌ Wrong
@@ -77,5 +78,5 @@ This runs two steps:
 
 - Source code lives in `src/`
 - Tests live in `src/tests/` (filenames start with `test_`)
-- Python ≥ 3.11 — managed automatically by uv
+- Python ≥ 3.14 — managed automatically by uv
 - Dependencies declared in `pyproject.toml`
