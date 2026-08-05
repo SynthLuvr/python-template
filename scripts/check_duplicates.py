@@ -49,8 +49,29 @@ def _asset_name() -> str:
     if sys.platform == "win32":
         return "lucidshark-duplo-windows-x86_64.zip"
     os_part = {"linux": "linux", "darwin": "macos"}[sys.platform]
-    machine = platform.uname().machine.lower()
-    return f"lucidshark-duplo-{os_part}-{_ARCH_BY_MACHINE[machine]}.tar.gz"
+    arch = _ARCH_BY_MACHINE[platform.machine().lower()]
+    return f"lucidshark-duplo-{os_part}-{arch}.tar.gz"
+
+
+def _extract_archive(archive_path: str, dest: Path) -> None:
+    opener = zipfile.ZipFile if archive_path.endswith(".zip") else tarfile.open
+    with opener(archive_path) as archive:
+        archive.extractall(dest)
+
+
+def _download_binary(target: Path) -> None:
+    asset = _asset_name()
+    url = f"{_BASE_URL}/v{DUPLO_VERSION}/{asset}"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    print(f"Downloading lucidshark-duplo v{DUPLO_VERSION} ({asset})...", file=sys.stderr)
+    archive, _ = urllib.request.urlretrieve(url)
+    try:
+        _extract_archive(archive, target.parent)
+    finally:
+        Path(archive).unlink(missing_ok=True)
+    if not target.is_file():
+        sys.exit(f"error: {target} not found after extraction")
+    target.chmod(0o755)
 
 
 def _resolve_binary() -> Path:
@@ -65,25 +86,13 @@ def _resolve_binary() -> Path:
     if target.is_file():
         return target
 
-    asset = _asset_name()
-    url = f"{_BASE_URL}/v{DUPLO_VERSION}/{asset}"
-    target.parent.mkdir(parents=True, exist_ok=True)
-    print(f"Downloading lucidshark-duplo v{DUPLO_VERSION} ({asset})...", file=sys.stderr)
-    archive, _ = urllib.request.urlretrieve(url)
-    try:
-        if asset.endswith(".zip"):
-            with zipfile.ZipFile(archive) as archive_file:
-                archive_file.extractall(target.parent)
-        else:
-            with tarfile.open(archive, "r:gz") as archive_file:
-                archive_file.extractall(target.parent)
-    finally:
-        Path(archive).unlink(missing_ok=True)
-
-    if not target.is_file():
-        sys.exit(f"error: {target} not found after extraction")
-    target.chmod(0o755)
+    _download_binary(target)
     return target
+
+
+def _parse_duplication_percent(output: str) -> float | None:
+    match = re.search(r"Duplication:\s*([\d.]+)%", output)
+    return float(match.group(1)) if match else None
 
 
 def main() -> int:
@@ -112,12 +121,10 @@ def main() -> int:
     output = result.stdout + result.stderr
     print(output, end="")
 
-    match = re.search(r"Duplication:\s*([\d.]+)%", output)
-    if match is None:
+    percent = _parse_duplication_percent(output)
+    if percent is None:
         print("Duplication gate FAILED: could not parse duplication summary.", file=sys.stderr)
         return 1
-
-    percent = float(match.group(1))
     if percent > args.threshold:
         print(
             f"Duplication gate FAILED: {percent}% > {args.threshold}% threshold.",
