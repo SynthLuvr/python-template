@@ -13,6 +13,13 @@ venv/
 # uv
 uv.lock
 
+# Coverage
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+coverage/
+
 # IDE
 .idea/
 .vscode/

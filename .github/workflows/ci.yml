@@ -26,5 +26,10 @@ jobs:
       - name: Format check
         run: uv run ruff format --check src/
 
+      - name: Audit dependencies
+        run: |
+          uv export --no-dev --no-emit-project --format requirements-txt -o /tmp/requirements.txt
+          uv run pip-audit -r /tmp/requirements.txt --strict
+
       - name: Test
         run: uv run pytest
