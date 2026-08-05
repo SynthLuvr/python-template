@@ -1,7 +1,8 @@
 # Python Template
 
-A minimal Python project template with a complete type-check, format, lint, and test
-toolchain. The code does nothing useful — it's a starting point for new projects.
+A minimal Python project template with a complete type-check, format, lint, test,
+coverage, and security (SAST/SCA) toolchain. The code does nothing useful — it's a
+starting point for new projects.
 
 ## Tech Stack
 
@@ -10,15 +11,17 @@ toolchain. The code does nothing useful — it's a starting point for new projec
 | [uv](https://docs.astral.sh/uv/) | Package manager & virtual environment |
 | [Python](https://www.python.org) | Language (≥ 3.14, managed by uv) |
 | [Pyright](https://github.com/microsoft/pyright) | Static type checking (strict mode) |
-| [Ruff](https://docs.astral.sh/ruff/) | Linter and formatter |
-| [pytest](https://docs.pytest.org/) | Test runner |
+| [Ruff](https://docs.astral.sh/ruff/) | Linter, formatter & security (SAST) rules |
+| [pytest](https://docs.pytest.org/) + [pytest-cov](https://pytest-cov.readthedocs.io/) | Test runner & coverage gate |
+| [pip-audit](https://github.com/pypa/pip-audit) | Dependency vulnerability (SCA) scan |
+| [lucidshark-duplo](https://github.com/toniantunovi/lucidshark-duplo) | Code duplication (clone) gate |
 | [Hatch](https://hatch.pypa.io/) | Build backend |
 
 ## Quick Start
 
 ```bash
 uv sync                      # install dependencies
-uv sync --all-extras         # also install dev deps (pytest, ruff, pyright)
+uv sync --all-extras         # also install dev deps (pytest, ruff, pyright, pip-audit)
 
 uv run pytest                # run unit tests
 ```
@@ -48,8 +51,24 @@ uv run ruff check --fix src/ # auto-fix lint issues
 ### Test
 
 ```bash
-uv run pytest                # run all tests
+uv run pytest                # run all tests (enforces 80% coverage gate)
 ```
+
+### Audit Dependencies
+
+```bash
+uv export --no-dev --no-emit-project --format requirements-txt -o /tmp/req.txt
+uv run pip-audit -r /tmp/req.txt --strict   # scan production deps for vulnerabilities
+```
+
+### Check Duplication
+
+```bash
+uv run python scripts/check_duplicates.py   # fail if duplicated code exceeds the 5% threshold
+```
+
+The `lucidshark-duplo` binary is auto-downloaded (pinned version, cached under the user
+cache dir) on first run, so this works locally and in CI with no Rust toolchain.
 
 ## Linting Configuration
 
@@ -66,6 +85,7 @@ uv run pytest                # run all tests
 | flake8-comprehensions | `C4` | Unnecessary comprehension/list/dict calls |
 | flake8-simplify | `SIM` | Code simplification opportunities |
 | flake8-type-checking | `TCH` | Imports only needed for type checking |
+| flake8-bandit | `S` | Security issues and code smells (SAST) |
 
 ### Import Ordering
 
@@ -111,9 +131,11 @@ GitHub Actions runs the full pipeline on every pull request (`.github/workflows/
 1. Set up Python 3.14 with uv
 2. Install dependencies (`uv sync --all-extras`)
 3. Type-check — `uv run pyright src/`
-4. Lint — `uv run ruff check src/`
+4. Lint (incl. SAST) — `uv run ruff check src/`
 5. Format check — `uv run ruff format --check src/`
-6. Test — `uv run pytest`
+6. Audit dependencies — `pip-audit` on the production dependency set
+7. Test (incl. 80% coverage gate) — `uv run pytest`
+8. Check duplication — `lucidshark-duplo` (5% threshold)
 
 ## Extending the Template
 

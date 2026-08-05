@@ -13,6 +13,16 @@ venv/
 # uv
 uv.lock
 
+# Coverage
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+coverage/
+
+# Duplo (lucidshark-duplo local cache, if --cache is enabled)
+.duplo-cache/
+
 # IDE
 .idea/
 .vscode/

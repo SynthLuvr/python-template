@@ -8,7 +8,9 @@ dependencies = []
 
 [project.optional-dependencies]
 dev = [
+    "pip-audit>=2.7.3",
     "pytest>=9.1.1",
+    "pytest-cov>=5.0.0",
     "pyright>=1.1.411",
     "ruff>=0.16.0",
 ]
@@ -23,13 +25,21 @@ packages = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["src/tests"]
 python_files = ["test_*.py"]
+addopts = "--cov=src --cov-report=term-missing --cov-fail-under=80"
 
 [tool.ruff]
 target-version = "py314"
 line-length = 100
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "TCH"]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "TCH", "S"]
+
+[tool.ruff.lint.per-file-ignores]
+# `assert` is the standard assertion primitive in tests, not a security risk.
+"src/tests/*" = ["S101"]
+# The bootstrap script intentionally downloads and runs an external binary, so the
+# bandit `S` rules (subprocess, network, archive extraction) do not apply.
+"scripts/*" = ["S"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["src"]
