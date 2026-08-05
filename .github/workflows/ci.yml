@@ -33,3 +33,6 @@ jobs:
 
       - name: Test
         run: uv run pytest
+
+      - name: Check duplication
+        run: uv run python scripts/check_duplicates.py

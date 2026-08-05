@@ -37,6 +37,9 @@ select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "TCH", "S"]
 [tool.ruff.lint.per-file-ignores]
 # `assert` is the standard assertion primitive in tests, not a security risk.
 "src/tests/*" = ["S101"]
+# The bootstrap script intentionally downloads and runs an external binary, so the
+# bandit `S` rules (subprocess, network, archive extraction) do not apply.
+"scripts/*" = ["S"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["src"]

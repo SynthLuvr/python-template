@@ -14,6 +14,7 @@ starting point for new projects.
 | [Ruff](https://docs.astral.sh/ruff/) | Linter, formatter & security (SAST) rules |
 | [pytest](https://docs.pytest.org/) + [pytest-cov](https://pytest-cov.readthedocs.io/) | Test runner & coverage gate |
 | [pip-audit](https://github.com/pypa/pip-audit) | Dependency vulnerability (SCA) scan |
+| [lucidshark-duplo](https://github.com/toniantunovi/lucidshark-duplo) | Code duplication (clone) gate |
 | [Hatch](https://hatch.pypa.io/) | Build backend |
 
 ## Quick Start
@@ -59,6 +60,15 @@ uv run pytest                # run all tests (enforces 80% coverage gate)
 uv export --no-dev --no-emit-project --format requirements-txt -o /tmp/req.txt
 uv run pip-audit -r /tmp/req.txt --strict   # scan production deps for vulnerabilities
 ```
+
+### Check Duplication
+
+```bash
+uv run python scripts/check_duplicates.py   # fail if duplicated code exceeds the 5% threshold
+```
+
+The `lucidshark-duplo` binary is auto-downloaded (pinned version, cached under the user
+cache dir) on first run, so this works locally and in CI with no Rust toolchain.
 
 ## Linting Configuration
 
@@ -125,6 +135,7 @@ GitHub Actions runs the full pipeline on every pull request (`.github/workflows/
 5. Format check — `uv run ruff format --check src/`
 6. Audit dependencies — `pip-audit` on the production dependency set
 7. Test (incl. 80% coverage gate) — `uv run pytest`
+8. Check duplication — `lucidshark-duplo` (5% threshold)
 
 ## Extending the Template
 
