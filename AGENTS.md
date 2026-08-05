@@ -5,11 +5,9 @@ Instructions for AI coding agents working in this repository.
 ## Quick Start
 
 ```bash
-uv sync
-uv run pytest          # run tests
-uv run pyright src/    # type-check
-uv run ruff check src/     # lint
-uv run ruff format --check src/  # format check
+uv sync --all-extras   # install dependencies (incl. dev tools)
+uv run poe lint        # full static pipeline (type-check + lint + format + audit + dupes)
+uv run poe test        # run tests
 ```
 
 ## Required Workflow
@@ -17,10 +15,11 @@ uv run ruff format --check src/  # format check
 Always run these before considering work complete:
 
 ```bash
-uv run pyright src/ && uv run ruff check src/ && uv run ruff format --check src/ && uv run pytest
+uv run poe check   # type-check + lint + format + audit + duplication + tests
 ```
 
-All four must pass with zero errors.
+All steps must pass with zero errors. `poe check` runs `poe lint` (type-check, lint,
+format check, dependency audit, duplication gate) followed by `poe test`.
 
 ## Coding Conventions (Enforced)
 
@@ -66,8 +65,7 @@ def add(a: int, b: int) -> int:
 If the linter complains about formatting, run:
 
 ```bash
-uv run ruff format src/
-uv run ruff check --fix src/
+uv run poe format
 ```
 
 This runs two steps:

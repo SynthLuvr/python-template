@@ -17,22 +17,8 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras
 
-      - name: Type-check
-        run: uv run pyright src/
-
       - name: Lint
-        run: uv run ruff check src/
-
-      - name: Format check
-        run: uv run ruff format --check src/
-
-      - name: Audit dependencies
-        run: |
-          uv export --no-dev --no-emit-project --format requirements-txt -o /tmp/requirements.txt
-          uv run pip-audit -r /tmp/requirements.txt --strict
+        run: uv run poe lint
 
       - name: Test
-        run: uv run pytest
-
-      - name: Check duplication
-        run: uv run python scripts/check_duplicates.py
+        run: uv run poe test

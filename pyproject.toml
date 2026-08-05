@@ -13,6 +13,7 @@ dev = [
     "pytest-cov>=5.0.0",
     "pyright>=1.1.411",
     "ruff>=0.16.0",
+    "poethepoet>=0.48.0",
 ]
 
 [build-system]
@@ -47,3 +48,52 @@ known-first-party = ["src"]
 [tool.pyright]
 pythonVersion = "3.14"
 typeCheckingMode = "strict"
+
+# ───────────────────────────────────────────────────────────────────
+# Task runner — Poe the Poet (https://poethepoet.natn.io)
+#
+# Poe auto-detects the uv virtualenv, so invoke tasks with `uv run poe <task>`
+# and the tools (pyright, ruff, pytest, …) resolve from the venv automatically.
+# `uv run poe lint` is the single command that runs the full static pipeline.
+# ───────────────────────────────────────────────────────────────────
+
+# ── Granular tasks ─────────────────────────────────────────────────
+[tool.poe.tasks.typecheck]
+help = "Strict type checking with Pyright"
+cmd = "pyright src/"
+
+[tool.poe.tasks.lint-check]
+help = "Lint all files, including the bandit/SAST rule set"
+cmd = "ruff check src/"
+
+[tool.poe.tasks.format-check]
+help = "Verify formatting without writing changes"
+cmd = "ruff format --check src/"
+
+[tool.poe.tasks.audit]
+help = "Scan production dependencies for known vulnerabilities (SCA)"
+shell = """
+uv export --no-dev --no-emit-project --format requirements-txt -o /tmp/requirements.txt \
+    && pip-audit -r /tmp/requirements.txt --strict
+"""
+
+[tool.poe.tasks.duplicates]
+help = "Fail if duplicated code exceeds the 5% threshold"
+cmd = "python scripts/check_duplicates.py"
+
+[tool.poe.tasks.test]
+help = "Run the test suite with the 80% coverage gate"
+cmd = "pytest"
+
+[tool.poe.tasks.format]
+help = "Auto-format and auto-fix lint issues (writes changes)"
+shell = "ruff format src/ && ruff check --fix src/"
+
+# ── Aggregate tasks ────────────────────────────────────────────────
+[tool.poe.tasks.lint]
+help = "Full static pipeline (type-check + lint + format check + audit + duplicates)"
+sequence = ["typecheck", "lint-check", "format-check", "audit", "duplicates"]
+
+[tool.poe.tasks.check]
+help = "Everything: the full lint pipeline plus the test suite"
+sequence = ["lint", "test"]

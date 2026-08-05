@@ -15,16 +15,33 @@ starting point for new projects.
 | [pytest](https://docs.pytest.org/) + [pytest-cov](https://pytest-cov.readthedocs.io/) | Test runner & coverage gate |
 | [pip-audit](https://github.com/pypa/pip-audit) | Dependency vulnerability (SCA) scan |
 | [lucidshark-duplo](https://github.com/toniantunovi/lucidshark-duplo) | Code duplication (clone) gate |
+| [Poe the Poet](https://poethepoet.natn.io/) | Task runner (single-command `poe lint` / `poe test`) |
 | [Hatch](https://hatch.pypa.io/) | Build backend |
 
 ## Quick Start
 
 ```bash
-uv sync                      # install dependencies
-uv sync --all-extras         # also install dev deps (pytest, ruff, pyright, pip-audit)
+uv sync --all-extras         # install dependencies (incl. dev tools: ruff, pyright, poethepoet, …)
 
-uv run pytest                # run unit tests
+uv run poe lint              # full static pipeline (type-check + lint + format + audit + dupes)
+uv run poe test              # run unit tests (80% coverage gate)
 ```
+
+## Tasks
+
+Tasks live in `pyproject.toml` under `[tool.poe.tasks]` and run with `uv run poe <task>`.
+Poe auto-detects the uv virtualenv, so tools resolve from it without an `uv run` prefix
+inside each task.
+
+| Task | Runs |
+|------|------|
+| `poe lint` | Full static pipeline: type-check, lint (incl. SAST), format check, dep audit, duplication gate |
+| `poe test` | Test suite (80% coverage gate) |
+| `poe check` | Everything — `poe lint` plus `poe test` |
+| `poe format` | Auto-format and auto-fix lint issues (writes changes) |
+
+Granular tasks are also available (`poe typecheck`, `poe lint-check`, `poe format-check`,
+`poe audit`, `poe duplicates`). Run `uv run poe` with no arguments to list every task.
 
 ## Commands
 
@@ -130,12 +147,8 @@ GitHub Actions runs the full pipeline on every pull request (`.github/workflows/
 
 1. Set up Python 3.14 with uv
 2. Install dependencies (`uv sync --all-extras`)
-3. Type-check — `uv run pyright src/`
-4. Lint (incl. SAST) — `uv run ruff check src/`
-5. Format check — `uv run ruff format --check src/`
-6. Audit dependencies — `pip-audit` on the production dependency set
-7. Test (incl. 80% coverage gate) — `uv run pytest`
-8. Check duplication — `lucidshark-duplo` (5% threshold)
+3. Lint — `uv run poe lint` (type-check, lint/SAST, format check, dep audit, duplication)
+4. Test — `uv run poe test` (80% coverage gate)
 
 ## Extending the Template
 
