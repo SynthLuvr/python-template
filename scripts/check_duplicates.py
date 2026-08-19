@@ -64,11 +64,17 @@ def _download_binary(target: Path) -> None:
     url = f"{_BASE_URL}/v{DUPLO_VERSION}/{asset}"
     target.parent.mkdir(parents=True, exist_ok=True)
     print(f"Downloading lucidshark-duplo v{DUPLO_VERSION} ({asset})...", file=sys.stderr)
-    archive, _ = urllib.request.urlretrieve(url)
+    # Download to a deterministic path that keeps the asset suffix.
+    # urlretrieve's auto-generated temp filename drops the extension, which
+    # would defeat the zip-vs-tar detection in _extract_archive above
+    # (breaking Windows, whose asset is a .zip while the fallback extractor
+    # expects a tarball).
+    archive = target.parent / asset
+    urllib.request.urlretrieve(url, archive)
     try:
-        _extract_archive(archive, target.parent)
+        _extract_archive(str(archive), target.parent)
     finally:
-        Path(archive).unlink(missing_ok=True)
+        archive.unlink(missing_ok=True)
     if not target.is_file():
         sys.exit(f"error: {target} not found after extraction")
     target.chmod(0o755)
