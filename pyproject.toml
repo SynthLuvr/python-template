@@ -51,6 +51,8 @@ typeCheckingMode = "strict"
 
 # Poe auto-detects the uv virtualenv, so task commands run tools directly
 # without an `uv run` prefix. Invoke tasks as `uv run poe <task>`.
+# Tasks use `cmd` or `sequence` (not `shell`) so they run identically on
+# Linux, macOS, and Windows with no dependency on a POSIX shell.
 [tool.poe.tasks.typecheck]
 help = "Strict type checking with Pyright"
 cmd = "pyright src/"
@@ -65,10 +67,7 @@ cmd = "ruff format --check src/"
 
 [tool.poe.tasks.audit]
 help = "Scan production dependencies for known vulnerabilities (SCA)"
-shell = """
-uv export --no-dev --no-emit-project --format requirements-txt -o /tmp/requirements.txt \
-    && pip-audit -r /tmp/requirements.txt --strict
-"""
+cmd = "python scripts/audit_deps.py"
 
 [tool.poe.tasks.duplicates]
 help = "Fail if duplicated code exceeds the 5% threshold"
@@ -80,7 +79,10 @@ cmd = "pytest"
 
 [tool.poe.tasks.format]
 help = "Auto-format and auto-fix lint issues (writes changes)"
-shell = "ruff format src/ && ruff check --fix src/"
+sequence = [
+    { cmd = "ruff format src/" },
+    { cmd = "ruff check --fix src/" },
+]
 
 [tool.poe.tasks.lint]
 help = "Full static pipeline (type-check + lint + format check + audit + duplicates)"

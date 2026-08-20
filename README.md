@@ -2,7 +2,9 @@
 
 A minimal Python project template with a complete type-check, format, lint, test,
 coverage, and security (SAST/SCA) toolchain. The code does nothing useful — it's a
-starting point for new projects.
+starting point for new projects. The toolchain runs identically on Linux and
+Windows (both exercised in CI), and the duplication gate ships prebuilt binaries
+for Linux, macOS, and Windows.
 
 ## Tech Stack
 
@@ -74,9 +76,11 @@ uv run pytest                # run all tests (enforces 80% coverage gate)
 ### Audit Dependencies
 
 ```bash
-uv export --no-dev --no-emit-project --format requirements-txt -o /tmp/req.txt
-uv run pip-audit -r /tmp/req.txt --strict   # scan production deps for vulnerabilities
+uv run python scripts/audit_deps.py    # scan production deps for vulnerabilities (SCA)
 ```
+
+The export + audit steps run in Python (temporary file handling without POSIX
+shell features), so they behave the same on Linux, macOS, and Windows.
 
 ### Check Duplication
 
@@ -130,7 +134,10 @@ These are **enforced by the toolchain**, not just preferences:
 ## Project Structure
 
 ```
-├── .github/workflows/     # CI
+├── .github/workflows/     # CI (Ubuntu + Windows)
+├── scripts/
+│   ├── audit_deps.py      # Portable SCA audit (uv export + pip-audit)
+│   └── check_duplicates.py  # Duplication gate (lucidshark-duplo)
 ├── src/
 │   ├── __init__.py        # Package init (version)
 │   ├── index.py           # Trivial module (replace with your code)
@@ -143,7 +150,8 @@ These are **enforced by the toolchain**, not just preferences:
 
 ## CI
 
-GitHub Actions runs the full pipeline on every pull request (`.github/workflows/ci.yml`):
+GitHub Actions runs the full pipeline on every pull request (`.github/workflows/ci.yml`)
+on both Ubuntu and Windows:
 
 1. Set up Python 3.14 with uv
 2. Install dependencies (`uv sync --all-extras`)
