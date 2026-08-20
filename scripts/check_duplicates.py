@@ -53,8 +53,8 @@ def _asset_name() -> str:
     return f"lucidshark-duplo-{os_part}-{arch}.tar.gz"
 
 
-def _extract_archive(archive_path: str, dest: Path) -> None:
-    opener = zipfile.ZipFile if archive_path.endswith(".zip") else tarfile.open
+def _extract_archive(archive_path: Path, dest: Path) -> None:
+    opener = zipfile.ZipFile if archive_path.suffix == ".zip" else tarfile.open
     with opener(archive_path) as archive:
         archive.extractall(dest)
 
@@ -64,15 +64,13 @@ def _download_binary(target: Path) -> None:
     url = f"{_BASE_URL}/v{DUPLO_VERSION}/{asset}"
     target.parent.mkdir(parents=True, exist_ok=True)
     print(f"Downloading lucidshark-duplo v{DUPLO_VERSION} ({asset})...", file=sys.stderr)
-    # Download to a deterministic path that keeps the asset suffix.
-    # urlretrieve's auto-generated temp filename drops the extension, which
-    # would defeat the zip-vs-tar detection in _extract_archive above
-    # (breaking Windows, whose asset is a .zip while the fallback extractor
-    # expects a tarball).
+    # Keep the asset's extension in the download path: urlretrieve's
+    # auto-generated temp name drops it, defeating the zip-vs-tar detection
+    # in _extract_archive.
     archive = target.parent / asset
     urllib.request.urlretrieve(url, archive)
     try:
-        _extract_archive(str(archive), target.parent)
+        _extract_archive(archive, target.parent)
     finally:
         archive.unlink(missing_ok=True)
     if not target.is_file():

@@ -76,14 +76,11 @@ uv run pytest                # run all tests (enforces 80% coverage gate)
 ### Audit Dependencies
 
 ```bash
-uv run poe audit                          # scan production deps for vulnerabilities
-# or equivalently:
-uv run python scripts/audit_deps.py
+uv run python scripts/audit_deps.py    # scan production deps for vulnerabilities (SCA)
 ```
 
-The audit runs through a portable script (temp-file handling in Python, no POSIX
-shell features like `/tmp` paths or `&&` chaining), so it behaves the same on
-Linux, macOS, and Windows.
+The export + audit steps run in Python (temporary file handling without POSIX
+shell features), so they behave the same on Linux, macOS, and Windows.
 
 ### Check Duplication
 

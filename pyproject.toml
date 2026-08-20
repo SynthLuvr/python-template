@@ -77,17 +77,12 @@ cmd = "python scripts/check_duplicates.py"
 help = "Run the test suite with the 80% coverage gate"
 cmd = "pytest"
 
-[tool.poe.tasks.format-apply]
-help = "Format all files with ruff (writes changes)"
-cmd = "ruff format src/"
-
-[tool.poe.tasks.lint-fix]
-help = "Auto-fix lint issues where possible (writes changes)"
-cmd = "ruff check --fix src/"
-
 [tool.poe.tasks.format]
 help = "Auto-format and auto-fix lint issues (writes changes)"
-sequence = ["format-apply", "lint-fix"]
+sequence = [
+    { cmd = "ruff format src/" },
+    { cmd = "ruff check --fix src/" },
+]
 
 [tool.poe.tasks.lint]
 help = "Full static pipeline (type-check + lint + format check + audit + duplicates)"
