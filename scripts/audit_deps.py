@@ -41,10 +41,8 @@ def main() -> int:
                 str(requirements),
             ]
         )
-        # `python -m`, not the `pip-audit` console script: on Windows that script is
-        # a generated per-install `.exe` stub, which endpoint policy blocking
-        # low-prevalence executables refuses to launch. It also drops the
-        # dependency on the venv's Scripts/ on PATH.
+        # `python -m`, not the console script: its generated Windows `.exe`
+        # stub is blocked by low-prevalence executable policies.
         _run([sys.executable, "-m", "pip_audit", "-r", str(requirements), "--strict"])
     return 0
 
