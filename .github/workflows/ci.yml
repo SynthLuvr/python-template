@@ -3,6 +3,9 @@ name: CI
 on:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   ci:
     strategy:
@@ -19,10 +22,11 @@ jobs:
         run: uv python install 3.14
 
       - name: Install dependencies
-        run: uv sync --all-extras
+        # --locked also fails the build if uv.lock is stale against pyproject.toml.
+        run: uv sync --all-extras --locked
 
       - name: Lint
-        run: uv run poe lint
+        run: uv run python -m poethepoet lint
 
       - name: Test
-        run: uv run poe test
+        run: uv run python -m poethepoet test

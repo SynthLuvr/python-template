@@ -25,6 +25,11 @@ DEFAULT_THRESHOLD = 5.0
 DEFAULT_MIN_LINES = 4
 _BASE_URL = "https://github.com/toniantunovi/lucidshark-duplo/releases/download"
 
+_UNAVAILABLE_HELP = """\
+  The duplication gate requires a prebuilt binary that could not be
+  downloaded or executed on this machine.
+  Fix: point LUCIDSHARK_DUPLO at an existing copy of the binary."""
+
 _ARCH_BY_MACHINE = {
     "x86_64": "x86_64",
     "amd64": "x86_64",
@@ -99,6 +104,38 @@ def _parse_duplication_percent(output: str) -> float | None:
     return float(match.group(1)) if match else None
 
 
+def _in_ci() -> bool:
+    return os.environ.get("CI", "").strip().lower() not in {"", "0", "false"}
+
+
+def _run_duplo(min_lines: int) -> str:
+    """Download Duplo if needed, run it over the git-tracked tree, return its output."""
+    binary = _resolve_binary()
+    result = subprocess.run(
+        [str(binary), "--git", "-m", str(min_lines), "-p", "100"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    return result.stdout + result.stderr
+
+
+def _report_unavailable(exc: OSError, *, required: bool) -> int:
+    """Report that the gate could not run and decide whether that is fatal."""
+    print(f"error: could not run lucidshark-duplo: {exc}", file=sys.stderr)
+    print(_UNAVAILABLE_HELP, file=sys.stderr)
+    if required:
+        print("Duplication gate FAILED: gate could not run.", file=sys.stderr)
+        return 1
+    print(
+        "Duplication gate SKIPPED: binary unavailable on this machine "
+        "(not a pass - the gate did not run). Use --require-binary to make this "
+        "fatal; it is already fatal in CI.",
+        file=sys.stderr,
+    )
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -113,16 +150,20 @@ def main() -> int:
         default=DEFAULT_MIN_LINES,
         help="Minimum duplicate block size in lines (default: %(default)s)",
     )
+    parser.add_argument(
+        "--require-binary",
+        action="store_true",
+        help="Fail if Duplo cannot be downloaded or executed, instead of skipping "
+        "(always on in CI)",
+    )
     args = parser.parse_args()
 
-    binary = _resolve_binary()
-    result = subprocess.run(
-        [str(binary), "--git", "-m", str(args.min_lines), "-p", "100"],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-    output = result.stdout + result.stderr
+    # One handler covers both failure modes: urllib raises URLError (an OSError)
+    # when the download fails, and a failed exec raises OSError too.
+    try:
+        output = _run_duplo(args.min_lines)
+    except OSError as exc:
+        return _report_unavailable(exc, required=args.require_binary or _in_ci())
     print(output, end="")
 
     percent = _parse_duplication_percent(output)

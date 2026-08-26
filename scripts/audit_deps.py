@@ -17,7 +17,11 @@ from pathlib import Path
 def _run(command: list[str]) -> None:
     """Echo and run `command`, exiting with its status on failure."""
     print(f"$ {' '.join(command)}", file=sys.stderr)
-    result = subprocess.run(command)
+    try:
+        result = subprocess.run(command)
+    except OSError as exc:
+        # A missing or unrunnable executable is an environment problem, not a bug here.
+        sys.exit(f"error: could not run {command[0]!r}: {exc}")
     if result.returncode != 0:
         sys.exit(result.returncode)
 
@@ -37,7 +41,8 @@ def main() -> int:
                 str(requirements),
             ]
         )
-        _run(["pip-audit", "-r", str(requirements), "--strict"])
+        # The importable module is pip_audit (underscore); the console script is pip-audit.
+        _run([sys.executable, "-m", "pip_audit", "-r", str(requirements), "--strict"])
     return 0
 
 

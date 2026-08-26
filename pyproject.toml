@@ -28,6 +28,11 @@ testpaths = ["src/tests"]
 python_files = ["test_*.py"]
 addopts = "--cov=src --cov-report=term-missing --cov-fail-under=80"
 
+[tool.coverage.run]
+# Tests live under `src/`, so `--cov=src` would otherwise score the test files
+# themselves at ~100%, inflating the total and weakening the 80% gate.
+omit = ["src/tests/*"]
+
 [tool.ruff]
 target-version = "py314"
 line-length = 100
@@ -44,6 +49,9 @@ select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "TCH", "S"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["src"]
+# Makes the documented `from __future__ import annotations` convention a lint
+# error (I002) rather than an honour-system rule.
+required-imports = ["from __future__ import annotations"]
 
 [tool.pyright]
 pythonVersion = "3.14"
@@ -53,17 +61,20 @@ typeCheckingMode = "strict"
 # without an `uv run` prefix. Invoke tasks as `uv run poe <task>`.
 # Tasks use `cmd` or `sequence` (not `shell`) so they run identically on
 # Linux, macOS, and Windows with no dependency on a POSIX shell.
+#
+# Every task goes through `python -m <module>` rather than the tool's console
+# script, so it does not depend on generated entry-point launchers.
 [tool.poe.tasks.typecheck]
 help = "Strict type checking with Pyright"
-cmd = "pyright src/"
+cmd = "python -m pyright src/ scripts/"
 
 [tool.poe.tasks.lint-check]
 help = "Lint all files, including the bandit/SAST rule set"
-cmd = "ruff check src/"
+cmd = "python -m ruff check src/ scripts/"
 
 [tool.poe.tasks.format-check]
 help = "Verify formatting without writing changes"
-cmd = "ruff format --check src/"
+cmd = "python -m ruff format --check src/ scripts/"
 
 [tool.poe.tasks.audit]
 help = "Scan production dependencies for known vulnerabilities (SCA)"
@@ -75,13 +86,13 @@ cmd = "python scripts/check_duplicates.py"
 
 [tool.poe.tasks.test]
 help = "Run the test suite with the 80% coverage gate"
-cmd = "pytest"
+cmd = "python -m pytest"
 
 [tool.poe.tasks.format]
 help = "Auto-format and auto-fix lint issues (writes changes)"
 sequence = [
-    { cmd = "ruff format src/" },
-    { cmd = "ruff check --fix src/" },
+    { cmd = "python -m ruff format src/ scripts/" },
+    { cmd = "python -m ruff check --fix src/ scripts/" },
 ]
 
 [tool.poe.tasks.lint]
