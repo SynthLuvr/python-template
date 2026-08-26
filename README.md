@@ -4,7 +4,9 @@ A minimal Python project template with a complete type-check, format, lint, test
 coverage, and security (SAST/SCA) toolchain. The code does nothing useful — it's a
 starting point for new projects. The toolchain runs identically on Linux and
 Windows (both exercised in CI), and the duplication gate ships prebuilt binaries
-for Linux, macOS, and Windows.
+for Linux, macOS, and Windows. Every tool is invoked as `python -m <module>` rather
+than through its generated console-script `.exe`, so it also works on managed Windows
+endpoints that block low-prevalence executables (see [Quick Start](#quick-start)).
 
 ## Tech Stack
 
@@ -29,11 +31,26 @@ uv run poe lint              # full static pipeline (type-check + lint + format 
 uv run poe test              # run unit tests (80% coverage gate)
 ```
 
+> **Restricted Windows endpoints.** `uv run poe` resolves to `.venv\Scripts\poe.exe`, a
+> generated launcher stub, which endpoint policy blocking low-prevalence executables
+> refuses to run — reporting a misleading
+> `Access is denied` / `The system cannot find the file specified`. Use the module form
+> instead; it works on every platform:
+>
+> ```bash
+> uv run python -m poethepoet lint
+> uv run python -m poethepoet test
+> ```
+>
+> Only the entry point needs this: the tasks already invoke every tool as
+> `python -m <module>`.
+
 ## Tasks
 
-Tasks live in `pyproject.toml` under `[tool.poe.tasks]` and run with `uv run poe <task>`.
-Poe auto-detects the uv virtualenv, so tools resolve from it without an `uv run` prefix
-inside each task.
+Tasks live in `pyproject.toml` under `[tool.poe.tasks]` and run with `uv run poe <task>`
+(or `uv run python -m poethepoet <task>` — see the note above). The type-check, lint and
+format tasks cover both `src/` and `scripts/`. Poe auto-detects the uv virtualenv, so
+tools resolve from it without an `uv run` prefix inside each task.
 
 | Task | Runs |
 |------|------|
@@ -50,27 +67,27 @@ Granular tasks are also available (`poe typecheck`, `poe lint-check`, `poe forma
 ### Type Check
 
 ```bash
-uv run pyright src/          # strict type checking
+uv run python -m pyright src/ scripts/   # strict type checking
 ```
 
 ### Lint
 
 ```bash
-uv run ruff check src/       # lint all files
+uv run python -m ruff check src/ scripts/   # lint all files
 ```
 
 ### Format
 
 ```bash
-uv run ruff format src/      # format all files (writes changes)
-uv run ruff format --check src/  # check formatting without writing
-uv run ruff check --fix src/ # auto-fix lint issues
+uv run python -m ruff format src/ scripts/          # format all files (writes changes)
+uv run python -m ruff format --check src/ scripts/  # check formatting without writing
+uv run python -m ruff check --fix src/ scripts/     # auto-fix lint issues
 ```
 
 ### Test
 
 ```bash
-uv run pytest                # run all tests (enforces 80% coverage gate)
+uv run python -m pytest       # run all tests (enforces 80% coverage gate)
 ```
 
 ### Audit Dependencies
@@ -90,6 +107,18 @@ uv run python scripts/check_duplicates.py   # fail if duplicated code exceeds th
 
 The `lucidshark-duplo` binary is auto-downloaded (pinned version, cached under the user
 cache dir) on first run, so this works locally and in CI with no Rust toolchain.
+
+Because it is a freshly downloaded prebuilt binary, a managed endpoint may refuse to
+execute it (endpoint policy blocks executables below a prevalence threshold). When the
+binary cannot be downloaded or run, the gate
+prints the reason and:
+
+- **in CI** (`CI` env var set) fails, so the gate can never silently vanish from a build;
+- **locally** reports `SKIPPED` and exits 0, so the rest of the pipeline stays usable.
+
+Pass `--require-binary` to make it fatal locally too. To restore the gate on a restricted
+machine, get an exclusion for the cached binary from IT, or set `LUCIDSHARK_DUPLO` to
+an approved copy. Renaming or relocating the binary is evasion of the control, not a fix.
 
 ## Linting Configuration
 
@@ -125,7 +154,8 @@ from src.index import greet
 
 These are **enforced by the toolchain**, not just preferences:
 
-- **`from __future__ import annotations`** in every module
+- **`from __future__ import annotations`** in every module (ruff `I002`, via
+  `required-imports` — a missing one is a lint error, not a style nit)
 - **Strict type checking** — all functions need explicit type annotations
 - **Line length** — 100 characters
 - **Import sorting** — handled by ruff's isort integration

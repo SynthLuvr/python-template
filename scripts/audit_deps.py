@@ -17,7 +17,11 @@ from pathlib import Path
 def _run(command: list[str]) -> None:
     """Echo and run `command`, exiting with its status on failure."""
     print(f"$ {' '.join(command)}", file=sys.stderr)
-    result = subprocess.run(command)
+    try:
+        result = subprocess.run(command)
+    except OSError as exc:
+        # A missing or policy-blocked executable is a setup problem, not a bug here.
+        sys.exit(f"error: could not run {command[0]!r}: {exc}")
     if result.returncode != 0:
         sys.exit(result.returncode)
 
@@ -37,7 +41,11 @@ def main() -> int:
                 str(requirements),
             ]
         )
-        _run(["pip-audit", "-r", str(requirements), "--strict"])
+        # `python -m`, not the `pip-audit` console script: on Windows that script is
+        # a generated per-install `.exe` stub, which endpoint policy blocking
+        # low-prevalence executables refuses to launch. It also drops the
+        # dependency on the venv's Scripts/ on PATH.
+        _run([sys.executable, "-m", "pip_audit", "-r", str(requirements), "--strict"])
     return 0
 
 
