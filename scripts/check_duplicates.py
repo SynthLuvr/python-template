@@ -26,12 +26,9 @@ DEFAULT_MIN_LINES = 4
 _BASE_URL = "https://github.com/toniantunovi/lucidshark-duplo/releases/download"
 
 _UNAVAILABLE_HELP = """\
-  The duplication gate needs to execute a downloaded prebuilt binary.
-  On a managed Windows endpoint, policy blocking low-prevalence executables
-  commonly refuses to run it.
-  Fixes: ask IT for an exclusion for the cached binary, or point
-  LUCIDSHARK_DUPLO at an approved copy.
-  Do not rename or move the binary to get around the rule."""
+  The duplication gate requires a prebuilt binary that could not be
+  downloaded or executed on this machine.
+  Fix: point LUCIDSHARK_DUPLO at an existing copy of the binary."""
 
 _ARCH_BY_MACHINE = {
     "x86_64": "x86_64",
@@ -124,12 +121,7 @@ def _run_duplo(min_lines: int) -> str:
 
 
 def _report_unavailable(exc: OSError, *, required: bool) -> int:
-    """Report that the gate could not run and decide whether that is fatal.
-
-    Endpoint policy blocking low-prevalence executables commonly refuses the
-    downloaded binary (surfacing as WinError 5 or 2). Renaming or relocating
-    the binary would evade that control, so advise an IT exclusion instead.
-    """
+    """Report that the gate could not run and decide whether that is fatal."""
     print(f"error: could not run lucidshark-duplo: {exc}", file=sys.stderr)
     print(_UNAVAILABLE_HELP, file=sys.stderr)
     if required:
@@ -167,7 +159,7 @@ def main() -> int:
     args = parser.parse_args()
 
     # One handler covers both failure modes: urllib raises URLError (an OSError)
-    # when the download fails, and exec of a blocked binary raises OSError too.
+    # when the download fails, and a failed exec raises OSError too.
     try:
         output = _run_duplo(args.min_lines)
     except OSError as exc:

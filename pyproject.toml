@@ -63,8 +63,7 @@ typeCheckingMode = "strict"
 # Linux, macOS, and Windows with no dependency on a POSIX shell.
 #
 # Every task goes through `python -m <module>` rather than the tool's console
-# script (`pyright`, `ruff`, ...): those are generated per-install `.exe` stubs on
-# Windows, which endpoint policy blocking low-prevalence executables refuses to run.
+# script, so it does not depend on generated entry-point launchers.
 [tool.poe.tasks.typecheck]
 help = "Strict type checking with Pyright"
 cmd = "python -m pyright src/ scripts/"

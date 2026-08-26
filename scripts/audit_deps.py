@@ -20,7 +20,7 @@ def _run(command: list[str]) -> None:
     try:
         result = subprocess.run(command)
     except OSError as exc:
-        # A missing or policy-blocked executable is a setup problem, not a bug here.
+        # A missing or unrunnable executable is an environment problem, not a bug here.
         sys.exit(f"error: could not run {command[0]!r}: {exc}")
     if result.returncode != 0:
         sys.exit(result.returncode)
@@ -41,8 +41,7 @@ def main() -> int:
                 str(requirements),
             ]
         )
-        # `python -m`, not the console script: its generated Windows `.exe`
-        # stub is blocked by low-prevalence executable policies.
+        # The importable module is pip_audit (underscore); the console script is pip-audit.
         _run([sys.executable, "-m", "pip_audit", "-r", str(requirements), "--strict"])
     return 0
 
