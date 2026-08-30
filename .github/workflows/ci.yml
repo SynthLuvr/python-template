@@ -14,9 +14,13 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v7.0.1
+      # Pinned to immutable commit SHAs (mutable tags can be retargeted or
+      # deleted, and only the v-prefixed spellings exist as refs — an
+      # unprefixed pin fails instantly at "Set up job"). The trailing
+      # comments track the resolved versions.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: astral-sh/setup-uv@v10.0.1
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
 
       - name: Set up Python
         run: uv python install 3.14
