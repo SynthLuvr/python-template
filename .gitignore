@@ -17,9 +17,6 @@ htmlcov/
 coverage.xml
 coverage/
 
-# Duplo (lucidshark-duplo local cache, if --cache is enabled)
-.duplo-cache/
-
 # IDE
 .idea/
 .vscode/
@@ -30,3 +27,5 @@ coverage/
 # OS
 .DS_Store
 Thumbs.db
+# canonist generated configs (kept only with --keep-config)
+.canonist/

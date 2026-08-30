@@ -30,6 +30,22 @@ filecache = [
 ]
 
 [[package]]
+name = "canonist"
+version = "0.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pip-audit" },
+    { name = "pyright" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "ruff" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/61/26/8923964b42bb8d5634389d9dfa428507ae43811042428569e1f788598bf4/canonist-0.2.0.tar.gz", hash = "sha256:fcee7c87e6e25efac5e40f4a408bd37b1c495f7084ce78f41443b804dcdd423e", size = 65087, upload-time = "2026-08-30T11:52:30.669Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/dc/2b/9bb5498e02e380de7fef59d601a1c27eb9b0eb184ff3b1b379fabbed503a/canonist-0.2.0-py3-none-any.whl", hash = "sha256:7a003a1a7d42d45d5316371038805cbafd3ed07490a39bdefde8a7ec8573363c", size = 26713, upload-time = "2026-08-30T11:52:29.654Z" },
+]
+
+[[package]]
 name = "certifi"
 version = "2026.7.22"
 source = { registry = "https://pypi.org/simple" }
@@ -526,22 +542,14 @@ source = { editable = "." }
 
 [package.optional-dependencies]
 dev = [
-    { name = "pip-audit" },
+    { name = "canonist" },
     { name = "poethepoet" },
-    { name = "pyright" },
-    { name = "pytest" },
-    { name = "pytest-cov" },
-    { name = "ruff" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "pip-audit", marker = "extra == 'dev'", specifier = ">=2.10.1" },
+    { name = "canonist", marker = "extra == 'dev'", specifier = ">=0.1.0" },
     { name = "poethepoet", marker = "extra == 'dev'", specifier = ">=0.48.0" },
-    { name = "pyright", marker = "extra == 'dev'", specifier = ">=1.1.411" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.1.1" },
-    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=7.1.0" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.16.3" },
 ]
 provides-extras = ["dev"]
 

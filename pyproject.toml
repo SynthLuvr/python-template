@@ -7,14 +7,7 @@ requires-python = ">=3.14"
 dependencies = []
 
 [project.optional-dependencies]
-dev = [
-    "pip-audit>=2.10.1",
-    "pytest>=9.1.1",
-    "pytest-cov>=7.1.0",
-    "pyright>=1.1.411",
-    "ruff>=0.16.3",
-    "poethepoet>=0.48.0",
-]
+dev = ["poethepoet>=0.48.0", "canonist>=0.1.0"]
 
 [build-system]
 requires = ["hatchling"]
@@ -23,82 +16,38 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
 
-[tool.pytest.ini_options]
-testpaths = ["src/tests"]
-python_files = ["test_*.py"]
-addopts = "--cov=src --cov-report=term-missing --cov-fail-under=80"
-
-[tool.coverage.run]
-# Tests live under `src/`, so `--cov=src` would otherwise score the test files
-# themselves at ~100%, inflating the total and weakening the 80% gate.
-omit = ["src/tests/*"]
-
-[tool.ruff]
-target-version = "py314"
-line-length = 100
-
-[tool.ruff.lint]
-select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "TCH", "S"]
-
-[tool.ruff.lint.per-file-ignores]
-# `assert` is the standard assertion primitive in tests, not a security risk.
-"src/tests/*" = ["S101"]
-# The bootstrap script intentionally downloads and runs an external binary, so the
-# bandit `S` rules (subprocess, network, archive extraction) do not apply.
-"scripts/*" = ["S"]
-
-[tool.ruff.lint.isort]
-known-first-party = ["src"]
-# Makes the documented `from __future__ import annotations` convention a lint
-# error (I002) rather than an honour-system rule.
-required-imports = ["from __future__ import annotations"]
-
-[tool.pyright]
-pythonVersion = "3.14"
-typeCheckingMode = "strict"
-
-# Poe auto-detects the uv virtualenv, so task commands run tools directly
-# without an `uv run` prefix. Invoke tasks as `uv run poe <task>`.
-# Tasks use `cmd` or `sequence` (not `shell`) so they run identically on
-# Linux, macOS, and Windows with no dependency on a POSIX shell.
+# Lint, format, test, and environment diagnostics come from canonist — one
+# dev dependency that bundles ruff, pyright, pytest (+coverage), pip-audit,
+# and the duplication gate, and ships the canonical tool presets.
 #
-# Every task goes through `python -m <module>` rather than the tool's console
-# script, so it does not depend on generated entry-point launchers.
-[tool.poe.tasks.typecheck]
-help = "Strict type checking with Pyright"
-cmd = "python -m pyright src/ scripts/"
-
-[tool.poe.tasks.lint-check]
-help = "Lint all files, including the bandit/SAST rule set"
-cmd = "python -m ruff check src/ scripts/"
-
-[tool.poe.tasks.format-check]
-help = "Verify formatting without writing changes"
-cmd = "python -m ruff format --check src/ scripts/"
-
-[tool.poe.tasks.audit]
-help = "Scan production dependencies for known vulnerabilities (SCA)"
-cmd = "python scripts/audit_deps.py"
-
-[tool.poe.tasks.duplicates]
-help = "Fail if duplicated code exceeds the 5% threshold"
-cmd = "python scripts/check_duplicates.py"
-
-[tool.poe.tasks.test]
-help = "Run the test suite with the 80% coverage gate"
-cmd = "python -m pytest"
+# Poe auto-detects the uv virtualenv, so task commands run tools directly
+# without an `uv run` prefix. Invoke tasks as `uv run poe <task>` (or
+# `uv run python -m poethepoet <task>` on endpoints that block generated
+# console-script launchers). Every task goes through `python -m <module>`
+# rather than a console script, so nothing depends on generated
+# entry-point launchers.
+[tool.poe.tasks.lint]
+help = "Full static pipeline via canonist"
+cmd = "python -m canonist lint"
 
 [tool.poe.tasks.format]
-help = "Auto-format and auto-fix lint issues (writes changes)"
-sequence = [
-    { cmd = "python -m ruff format src/ scripts/" },
-    { cmd = "python -m ruff check --fix src/ scripts/" },
-]
+help = "Auto-format and auto-fix lint issues"
+cmd = "python -m canonist format"
 
-[tool.poe.tasks.lint]
-help = "Full static pipeline (type-check + lint + format check + audit + duplicates)"
-sequence = ["typecheck", "lint-check", "format-check", "audit", "duplicates"]
+[tool.poe.tasks.test]
+help = "Test suite with the coverage gate"
+cmd = "python -m canonist test"
+
+[tool.poe.tasks.doctor]
+help = "Diagnose the environment"
+cmd = "python -m canonist doctor"
 
 [tool.poe.tasks.check]
-help = "Everything: the full lint pipeline plus the test suite"
+help = "Everything: lint plus tests"
 sequence = ["lint", "test"]
+
+# Local deltas over canonist's bundled presets (deep-merged at invocation
+# time: later keys win, lists replace, tables merge recursively). Keep this
+# empty unless the repo genuinely deviates — rule and preset changes belong
+# in canonist; bump its version to pick them up.
+[tool.canonist.ruff.lint.per-file-ignores]

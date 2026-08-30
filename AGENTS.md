@@ -5,8 +5,8 @@ Instructions for AI coding agents working in this repository.
 ## Quick Start
 
 ```bash
-uv sync --all-extras   # install dependencies (incl. dev tools)
-uv run poe lint        # full static pipeline (type-check + lint + format + audit + dupes)
+uv sync --all-extras   # install dependencies (canonist + poethepoet)
+uv run poe lint        # full static pipeline (format check, lint, typecheck, lock, audit, dupes)
 uv run poe test        # run tests
 ```
 
@@ -27,26 +27,43 @@ The Poe tasks already invoke their tools this way internally.
 Always run these before considering work complete:
 
 ```bash
-uv run poe check   # type-check + lint + format + audit + duplication + tests
+uv run poe check   # the full lint pipeline plus the test suite
 # or, on a restricted Windows endpoint:
 uv run python -m poethepoet check
 ```
 
-All steps must pass with zero errors. `poe check` runs `poe lint` (type-check, lint,
-format check, dependency audit, duplication gate) followed by `poe test`.
+Everything must pass with zero errors. `poe check` runs `poe lint` (ruff format
+check, ruff check incl. SAST, pyright strict, lockfile freshness, pip-audit,
+duplication gate) followed by `poe test` (80% coverage gate).
 
-One caveat: the duplication gate runs a downloaded prebuilt binary, which the same
-endpoint policy blocks. Where it cannot run it prints `Duplication gate SKIPPED` and exits 0 (in CI
-it fails instead). `SKIPPED` means the gate did **not** run — do not read it as a pass,
-and do not move or rename the binary to get around the block.
+## Toolchain
+
+Lint, format, testing, and environment checks come from
+[canonist](https://github.com/SynthLuvr/canonist) — one dev dependency that bundles
+Ruff, Pyright (strict), pytest + pytest-cov, pip-audit, the lucidshark-duplo
+duplication gate, and the canonical ruff/pyright/pytest presets.
+
+- Run tooling through `uv run poe <task>` (`poe lint`, `poe format`, `poe test`,
+  `poe doctor`), not by invoking tools directly.
+- `python -m canonist lint` / `format` accept path arguments; `lint` also takes
+  `--fast` (skips pip-audit and the duplication gate).
+- `poe doctor` (`python -m canonist doctor`) diagnoses toolchain/environment problems.
+- The duplication gate downloads a pinned prebuilt binary on first use. Where it
+  cannot be downloaded or run it prints `Duplication gate SKIPPED` locally and exits 0,
+  and fails in CI. `SKIPPED` means the gate did **not** run — do not read it as a pass,
+  and do not move or rename the binary to get around the block.
+- Tool, rule, threshold, and preset changes belong in canonist — bump its version in
+  `pyproject.toml` to pick them up. Do not add per-step tool scripts or re-inline tool
+  config blocks here; keep only true local deltas under `[tool.canonist.*]`.
 
 ## Coding Conventions (Enforced)
 
 These are **not** preferences — the toolchain will fail if you violate them:
 
 ### Use `from __future__ import annotations`
-Every module must start with this import for consistent type-hint semantics. Enforced by
-ruff `I002` (`required-imports`), so a missing one fails `poe lint`.
+
+Every module must start with this import for consistent type-hint semantics. Enforced
+by ruff `I002` (`required-imports`), so a missing one fails `poe lint`.
 
 ```python
 # ❌ Wrong
@@ -60,9 +77,10 @@ def foo() -> str: ...
 ```
 
 ### Strict type checking
-Pyright runs in `strict` mode. All function parameters and return types must
-have explicit type annotations. Strict mode also rejects implicit `Any` types
-and untyped `dict`/`list` literals where the type can't be inferred.
+
+Pyright runs in `strict` mode. All function parameters and return types must have
+explicit type annotations. Strict mode also rejects implicit `Any` types and untyped
+`dict`/`list` literals where the type can't be inferred.
 
 ```python
 # ❌ Wrong
@@ -75,6 +93,7 @@ def add(a: int, b: int) -> int:
 ```
 
 ### Formatting
+
 - Line length: 100 characters
 - Double quotes for strings
 - Import sorting via `isort` (ruff's `I` rules)
@@ -88,8 +107,9 @@ If the linter complains about formatting, run:
 uv run poe format
 ```
 
-This runs two steps:
-1. `ruff format` — formats all files (indentation, quotes, etc.)
+This runs `python -m canonist format`:
+
+1. `ruff format` — formats all files
 2. `ruff check --fix` — applies lint auto-fixes (import sorting, etc.)
 
 ## Project Structure
@@ -97,6 +117,6 @@ This runs two steps:
 - Source code lives in `src/`
 - Tests live in `src/tests/` (filenames start with `test_`), and are excluded from
   coverage measurement so the 80% gate reflects real source coverage
-- Toolchain helper scripts live in `scripts/`, and are type-checked and linted too
 - Python ≥ 3.14 — managed automatically by uv
-- Dependencies declared in `pyproject.toml`
+- Dependencies are declared in `pyproject.toml`; the lockfile (`uv.lock`) is committed
+  and its freshness is checked by `poe lint`
