@@ -3,7 +3,7 @@ name = "python-template"
 version = "0.1.0"
 description = "A minimal Python project template with a complete type-check, format, lint, and test toolchain"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.15"
 dependencies = []
 
 [project.optional-dependencies]
@@ -50,4 +50,13 @@ sequence = ["lint", "test"]
 # time: later keys win, lists replace, tables merge recursively). Keep this
 # empty unless the repo genuinely deviates — rule and preset changes belong
 # in canonist; bump its version to pick them up.
+# Language pins: canonist's presets target the Python version current at its
+# release, so moving off that requires overriding them here (see README,
+# "Change the Python version").
+[tool.canonist.ruff]
+target-version = "py315"
+
+[tool.canonist.pyright]
+pythonVersion = "3.15"
+
 [tool.canonist.ruff.lint.per-file-ignores]
