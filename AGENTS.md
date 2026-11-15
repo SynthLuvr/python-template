@@ -117,6 +117,6 @@ This runs `python -m canonist format`:
 - Source code lives in `src/`
 - Tests live in `src/tests/` (filenames start with `test_`), and are excluded from
   coverage measurement so the 80% gate reflects real source coverage
-- Python ≥ 3.14 — managed automatically by uv
+- Python ≥ 3.15 — managed automatically by uv
 - Dependencies are declared in `pyproject.toml`; the lockfile (`uv.lock`) is committed
   and its freshness is checked by `poe lint`

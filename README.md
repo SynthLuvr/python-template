@@ -18,7 +18,7 @@ low-prevalence executables (see [Quick Start](#quick-start)).
 | Tool | Purpose |
 |------|---------|
 | [uv](https://docs.astral.sh/uv/) | Package manager & virtual environment |
-| [Python](https://www.python.org) | Language (≥ 3.14, managed by uv) |
+| [Python](https://www.python.org) | Language (≥ 3.15, managed by uv) |
 | [canonist](https://github.com/SynthLuvr/canonist) | The shared lint/format/test/doctor toolchain |
 | [Poe the Poet](https://poethepoet.natn.io/) | Task runner (single-command `poe lint` / `poe test`) |
 | [Hatch](https://hatch.pypa.io/) | Build backend |
@@ -111,7 +111,7 @@ gate reflects real source coverage.
 uv run poe doctor   # diagnose the environment, bundled tools, and generated configs
 ```
 
-Checks Python (≥ 3.14), uv, the bundled tools, the presets, the `[tool.canonist]`
+Checks Python (≥ 3.15), uv, the bundled tools, the presets, the `[tool.canonist]`
 overrides, and duplo availability.
 
 ## Tool Configuration
@@ -165,7 +165,7 @@ These are **enforced by the toolchain**, not just preferences:
 GitHub Actions runs the full pipeline on every pull request
 (`.github/workflows/ci.yml`) on both Ubuntu and Windows:
 
-1. Set up Python 3.14 with uv
+1. Set up Python 3.15 with uv
 2. Install dependencies (`uv sync --all-extras --locked`)
 3. Lint — `uv run python -m poethepoet lint`
 4. Test — `uv run python -m poethepoet test` (80% coverage gate)
@@ -190,6 +190,6 @@ uv add --optional dev mypy             # dev dependency (the `dev` extra)
 
 ### Change the Python version
 
-Update `requires-python` in `pyproject.toml`. If you move off 3.14, also override the
+Update `requires-python` in `pyproject.toml`. If you move off 3.15, also override the
 preset's language pins via `[tool.canonist.ruff]` (`target-version`) and
 `[tool.canonist.pyright]` (`pythonVersion`) so the bundled tools follow along.
